@@ -7,6 +7,6 @@
 
 GitHub Pages：`https://nini1319.github.io/nursing--SA/`
 
-雲端後端健康檢查：`https://script.google.com/macros/s/AKfycby0CFvi73d2tdZaSuSPXv0-DY8UNx-rgNZV4P3orIhAuHjIbmmuSl7KEXBlf5B0zITSBw/exec?health=1`
+雲端後端健康檢查：`https://script.google.com/macros/s/AKfycbwf-Yc04DVc-fCDw_XxTzrIBhJdooq_IDR0e9XOOfe0sj3CQ3i-G6PDVwgVTQqYwkXJvQ/exec?health=1`
 
 注意：學生作答與人員名冊不存放在 GitHub，而是透過 Apps Script 寫入各單位 Google 試算表。
