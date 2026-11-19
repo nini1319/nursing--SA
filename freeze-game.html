@@ -1,0 +1,893 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>凍結！病房 90 秒</title>
+<meta name="description" content="黏土風情境覺察團隊遊戲：主持人投影用網頁版（第 1 關：夜班的拖鞋）">
+<style>
+:root{
+  --cream:#F6EFE3; --cream2:#EFE4D2; --mint:#9ED8C6; --mint-d:#5FAE96; --peach:#F4A6A0; --peach-d:#D97A73;
+  --pumpkin:#F39C5A; --ice:#A9D4F5; --cocoa:#5A4636; --cocoa-l:#8A7462; --night:#2B3552;
+  --paper:#FFFBF4; --shadow:0 6px 0 #5a46361f,0 14px 30px #5a463626;
+  --round:"jf-openhuninn-2.0","jf open 粉圓 2.0","GenSenRounded TW","Zen Maru Gothic","Microsoft JhengHei","PingFang TC","Noto Sans CJK TC",sans-serif;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--cream);color:var(--cocoa);font-family:var(--round);overflow-x:hidden;
+  background-image:radial-gradient(#e8dcc7 1.2px,transparent 1.3px);background-size:22px 22px}
+button{font:inherit;color:inherit;cursor:pointer}
+.hidden{display:none!important}
+
+/* ---------- clay primitives ---------- */
+.clay{background:var(--paper);border-radius:22px;box-shadow:var(--shadow),inset 0 -4px 0 #5a46360f,inset 0 3px 0 #ffffff;}
+.btn{border:0;border-radius:999px;padding:.6em 1.15em;font-weight:800;background:var(--paper);
+  box-shadow:0 4px 0 #5a46362e,inset 0 2px 0 #fff;transition:transform .08s,box-shadow .08s;white-space:nowrap}
+.btn:active{transform:translateY(3px);box-shadow:0 1px 0 #5a46362e}
+.btn.peach{background:var(--peach);color:#fff;text-shadow:0 1px 0 #b4605a}
+.btn.mint{background:var(--mint);color:#21584a}
+.btn.ghost{background:transparent;box-shadow:inset 0 0 0 2px #5a463633}
+.btn[disabled]{opacity:.4;pointer-events:none}
+.chip{display:inline-flex;align-items:center;gap:.35em;padding:.25em .8em;border-radius:999px;background:var(--cream2);font-weight:700;font-size:.85em}
+
+/* ---------- start screen ---------- */
+#start{min-height:100%;display:flex;align-items:center;justify-content:center;padding:24px 16px}
+.start-card{max-width:980px;width:100%;padding:28px clamp(16px,4vw,44px)}
+.title{font-size:clamp(2rem,5.6vw,3.6rem);margin:.1em 0 .1em;letter-spacing:.04em;line-height:1.15}
+.title b{color:var(--peach-d)}
+.subtitle{margin:0 0 1.2em;color:var(--cocoa-l);font-size:1.05rem}
+.start-grid{display:grid;grid-template-columns:1.1fr 1fr;gap:22px}
+.panel{background:var(--cream);border-radius:18px;padding:16px 18px}
+.panel h3{margin:0 0 .6em;font-size:1.05rem}
+.teams{display:grid;gap:8px}
+.team-row{display:flex;gap:8px;align-items:center}
+.team-row input{flex:1;min-width:0;border:0;border-radius:12px;padding:.55em .8em;font:inherit;background:#fff;box-shadow:inset 0 2px 0 #5a46361a}
+.dot{width:16px;height:16px;border-radius:50%;flex:none;box-shadow:inset 0 -2px 0 #0002}
+.roles{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.role{text-align:center;font-size:.82rem;line-height:1.35}
+.role svg{width:100%;max-width:92px;height:auto}
+.role b{display:block;font-size:.95rem}
+.levels{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.kbd{font-family:ui-monospace,monospace;background:#fff;border-radius:6px;padding:0 .4em;box-shadow:0 2px 0 #5a463633;font-size:.85em}
+
+/* ---------- game layout ---------- */
+#game{height:100vh;height:100dvh;display:flex;flex-direction:column;padding:10px clamp(8px,1.6vw,18px) 10px;gap:10px}
+.hud{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.stepper{display:flex;gap:6px;flex-wrap:wrap}
+.step{font-size:.8rem;padding:.3em .75em;border-radius:999px;background:var(--cream2);color:var(--cocoa-l);font-weight:700}
+.step.on{background:var(--cocoa);color:var(--cream)}
+.step.done{background:var(--mint);color:#21584a}
+.phase-name{font-size:clamp(1.1rem,2.2vw,1.6rem);font-weight:900;margin-right:auto}
+.timer-num{font-variant-numeric:tabular-nums;font-size:clamp(1.6rem,3.4vw,2.6rem);font-weight:900;min-width:3.2em;text-align:right}
+.timer-num.warn{color:var(--pumpkin);animation:pulse 1s infinite}
+@keyframes pulse{50%{transform:scale(1.08)}}
+
+/* melting popsicle progress */
+.pop{position:relative;height:30px;display:flex;align-items:center}
+.pop-stick{width:44px;height:12px;background:#E2C08F;border-radius:6px;box-shadow:inset 0 -3px 0 #c69f6a;flex:none;margin-right:-8px}
+.pop-track{flex:1;height:30px;border-radius:16px;background:#5a463614;position:relative;overflow:visible}
+.pop-fill{position:absolute;left:0;top:0;bottom:0;border-radius:8px 16px 16px 8px;background:linear-gradient(180deg,#bfe9dc,var(--mint) 45%,#7fc5b0);
+  box-shadow:inset 0 3px 0 #ffffff88,inset 0 -4px 0 #0000001a;transition:width .3s linear,background .4s}
+.pop-fill.hot{background:linear-gradient(180deg,#ffc79d,var(--pumpkin) 50%,#d97f3c)}
+.drip{position:absolute;right:6px;bottom:-10px;width:10px;height:14px;border-radius:50% 50% 50% 50%/40% 40% 60% 60%;background:inherit;animation:drip 1.6s infinite ease-in}
+.drip.d2{right:22px;animation-delay:.7s;width:8px}
+@keyframes drip{0%{transform:translateY(-8px) scale(.6);opacity:0}30%{opacity:1}100%{transform:translateY(16px) scale(1);opacity:0}}
+
+.stage-wrap{flex:1;min-height:0;display:flex;gap:12px}
+.stage{position:relative;flex:1;min-width:0;border-radius:26px;overflow:hidden;background:#cfc3b1;box-shadow:var(--shadow)}
+.stage > svg.scene{position:absolute;inset:0;width:100%;height:100%}
+.side{width:min(340px,30vw);display:flex;flex-direction:column;gap:10px;overflow:auto}
+.side .clay{padding:14px 16px}
+.side h4{margin:0 0 .5em;font-size:1rem}
+.side ol,.side ul{margin:0;padding-left:1.3em;line-height:1.6}
+
+/* overlays */
+.overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center}
+#freeze{background:rgba(169,212,245,.7);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);flex-direction:column;gap:18px;animation:freezeIn .5s ease-out}
+@keyframes freezeIn{from{backdrop-filter:blur(0);background:rgba(169,212,245,0)}}
+.ice-word{font-size:clamp(2.6rem,8vw,6.4rem);font-weight:900;color:#fff;letter-spacing:.06em;padding:.1em .5em;border-radius:28px;
+  background:linear-gradient(160deg,#e6f4ff,#a9d4f5 60%,#7fb6e0);box-shadow:inset 0 6px 0 #fff9,inset 0 -10px 0 #5f9ccc66,0 14px 30px #2b4a6b40;
+  text-shadow:0 3px 0 #5f9ccc,0 6px 12px #2b4a6b55;transform:rotate(-3deg);animation:wobble 3s ease-in-out infinite}
+@keyframes wobble{50%{transform:rotate(2deg) scale(1.02)}}
+.freeze-q{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;width:min(1000px,92%)}
+.freeze-q .clay{padding:14px 16px;background:#ffffffe6}
+.freeze-q b{display:block;font-size:1.25rem;color:#3d6f99}
+.lvl{display:inline-block;background:#3d6f99;color:#fff;border-radius:8px;padding:0 .45em;margin-right:.3em;font-size:.85em}
+
+#comic{align-items:stretch;justify-content:stretch;background:var(--cream);padding:clamp(8px,2vw,22px);display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:clamp(8px,1.4vw,16px)}
+.panel4{position:relative;border-radius:22px;overflow:hidden;background:#fff;box-shadow:var(--shadow);opacity:0;transform:translateY(16px) scale(.97);transition:.5s}
+.panel4.show{opacity:1;transform:none}
+.panel4 svg{position:absolute;inset:0;width:100%;height:100%}
+.bubble{position:absolute;left:4%;right:4%;bottom:5%;background:#fff;border-radius:18px;padding:.45em .8em;font-weight:800;font-size:clamp(.8rem,1.55vw,1.2rem);box-shadow:0 4px 0 #5a463622;line-height:1.4}
+.bubble small{display:block;font-weight:600;color:var(--cocoa-l);font-size:.75em}
+.pnum{position:absolute;left:10px;top:8px;width:30px;height:30px;border-radius:50%;background:var(--cocoa);color:var(--cream);display:grid;place-items:center;font-weight:900;font-size:.9rem}
+
+#clockFx{background:radial-gradient(circle,#2b3552cc,#141a30f2);flex-direction:column;color:#fff;gap:10px}
+#clockFx svg{width:min(42vh,300px);height:auto}
+#clockFx .spin{transform-origin:150px 150px;animation:spin .35s linear infinite}
+#clockFx .spin2{transform-origin:150px 150px;animation:spin 4.2s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.big-msg{font-size:clamp(1.4rem,3.2vw,2.4rem);font-weight:900;text-shadow:0 3px 0 #0005}
+
+.banner{position:absolute;left:50%;top:14px;transform:translateX(-50%);padding:.45em 1.2em;border-radius:999px;background:#fffbf4ee;font-weight:900;box-shadow:var(--shadow);font-size:clamp(.9rem,1.7vw,1.25rem);white-space:nowrap}
+.banner.ice{background:#e3f2ffee;color:#2f5f88}
+
+/* magnifier */
+#lens{position:fixed;width:min(36vw,300px);height:min(36vw,300px);border-radius:50%;pointer-events:none;z-index:40;overflow:hidden;
+  box-shadow:0 0 0 10px #E2C08F,0 0 0 14px #c69f6a,0 16px 40px #0007;background:#1d2440;transform:translate(-50%,-50%)}
+#lens svg{width:100%;height:100%;display:block}
+#lensTime{position:fixed;z-index:41;pointer-events:none;font-weight:900;background:#fffbf4;border-radius:999px;padding:.1em .6em;box-shadow:var(--shadow);transform:translate(-50%,0)}
+
+/* hotspots */
+.hot circle.ring{fill:none;stroke:#F4A6A0;stroke-width:6;stroke-dasharray:14 9;animation:dash 1.6s linear infinite}
+.hot.distr circle.ring{stroke:#cfc2b0}
+.hot.hidden-clue circle.ring{stroke:#F39C5A}
+@keyframes dash{to{stroke-dashoffset:-46}}
+.hot text{font-family:var(--round);font-weight:900;font-size:26px;fill:#5A4636}
+.hot rect{fill:#fffbf4}
+
+/* toolbar */
+.toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.toolbar .sp{flex:1}
+.abil{display:flex;gap:6px;flex-wrap:wrap}
+.abil .btn{font-size:.85rem;padding:.5em .9em}
+
+/* modal */
+#modal{position:fixed;inset:0;background:#5a463666;display:flex;align-items:center;justify-content:center;z-index:50;padding:16px}
+#modal .clay{max-width:560px;width:100%;padding:22px 24px;animation:pop .25s ease-out}
+@keyframes pop{from{transform:scale(.85) rotate(-2deg);opacity:0}}
+#modal h3{margin:.1em 0 .5em}
+.card-face{border-radius:16px;padding:14px 16px;background:var(--cream);line-height:1.7;font-size:1.05rem}
+
+/* review */
+#review{position:absolute;inset:0;background:var(--cream);overflow:auto;padding:clamp(10px,2vw,22px)}
+.rv-grid{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:14px}
+.rv-grid .clay{padding:14px 16px}
+table.score{width:100%;border-collapse:separate;border-spacing:0 6px;font-size:.9rem}
+table.score th{font-size:.75rem;color:var(--cocoa-l);font-weight:800;text-align:center;padding:0 4px;line-height:1.3}
+table.score th:first-child{text-align:left}
+table.score td{background:var(--cream);text-align:center;padding:6px 4px}
+table.score td:first-child{border-radius:12px 0 0 12px;text-align:left;font-weight:800;padding-left:10px;white-space:nowrap}
+table.score td:last-child{border-radius:0 12px 12px 0}
+.num-in{display:inline-flex;align-items:center;gap:2px}
+.num-in button{width:26px;height:26px;border-radius:50%;border:0;background:#fff;box-shadow:0 2px 0 #5a463633;font-weight:900;padding:0;line-height:1}
+.num-in span{min-width:1.4em;font-weight:900;font-variant-numeric:tabular-nums}
+.tog{width:30px;height:30px;border-radius:10px;border:0;background:#fff;box-shadow:0 2px 0 #5a463633;font-weight:900}
+.tog.on{background:var(--mint);color:#21584a}
+.total{font-weight:900;font-size:1.1rem}
+.stamp{display:inline-block;border:3px solid currentColor;border-radius:10px;padding:.05em .45em;font-weight:900;transform:rotate(-6deg);font-size:.82rem;white-space:nowrap;background:#fff8}
+.stamp.perfect{color:#2f8a6f}.stamp.after{color:#d9772f}.stamp.icu{color:#6a5a9c}
+.stamp.big{font-size:clamp(1.1rem,2.2vw,1.6rem);border-width:4px;padding:.1em .6em;animation:stampIn .35s cubic-bezier(.3,1.6,.6,1)}
+@keyframes stampIn{from{transform:scale(2.4) rotate(-14deg);opacity:0}}
+.ans dt{font-weight:900;margin-top:.5em}
+.ans dd{margin:0 0 .2em;line-height:1.6}
+.board{display:grid;gap:8px}
+.board .rowb{display:flex;align-items:center;gap:10px;background:var(--cream);border-radius:14px;padding:8px 12px}
+.board .rank{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font-weight:900;background:#fff}
+.board .rowb:first-child .rank{background:#F2D27A}
+.board .bar{flex:1;height:12px;border-radius:8px;background:#5a463614;overflow:hidden}
+.board .bar i{display:block;height:100%;background:var(--peach);border-radius:8px}
+.cluelist{display:grid;gap:4px;font-size:.9rem}
+.cluelist div{display:flex;gap:8px;align-items:baseline}
+.cluelist .n{flex:none;width:24px;height:24px;border-radius:50%;background:var(--peach);color:#fff;display:grid;place-items:center;font-weight:900;font-size:.8rem}
+.cluelist .n.h{background:var(--pumpkin)}.cluelist .n.d{background:#cfc2b0}
+.note{font-size:.85rem;color:var(--cocoa-l)}
+
+@media (max-width:900px){
+  .start-grid,.rv-grid{grid-template-columns:1fr}
+  .stage-wrap{flex-direction:column}
+  .side{width:auto;max-height:34vh}
+  #game{height:auto;min-height:100dvh}
+  .stage{aspect-ratio:16/9;flex:none}
+  #review{position:relative;inset:auto}
+  .stage.review-mode{aspect-ratio:auto}
+  .freeze-q{grid-template-columns:1fr;font-size:.8rem}
+  .freeze-q .clay{padding:8px 10px}
+  .roles{grid-template-columns:repeat(2,1fr)}
+}
+</style>
+</head>
+<body>
+
+<!-- ======================= START ======================= -->
+<section id="start">
+  <div class="start-card clay">
+    <span class="chip">黏土鎮醫院 · 情境覺察訓練</span>
+    <h1 class="title">凍結！<b>病房 90 秒</b></h1>
+    <p class="subtitle">黏土小護理師的值班夜 ── 看見、看懂、看遠</p>
+    <div class="start-grid">
+      <div class="panel">
+        <h3>1. 建立隊伍（3–6 隊，每隊 3–4 人）</h3>
+        <div class="teams" id="teamInputs"></div>
+        <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn ghost" id="addTeam">＋ 加一隊</button>
+          <button class="btn ghost" id="rmTeam">－ 減一隊</button>
+        </div>
+        <h3 style="margin-top:16px">2. 選關卡</h3>
+        <div class="levels" id="caseSel"></div>
+        <p class="note" style="margin:.6em 0 0">第 1 關「夜班的拖鞋」已完成；其餘 5 關可依同一資料格式加入程式中的 <code>CASES</code>。</p>
+      </div>
+      <div class="panel">
+        <h3>3. 每隊至少 3 種角色</h3>
+        <div class="roles" id="roleCards"></div>
+        <h3 style="margin-top:14px">主持人快捷鍵</h3>
+        <div class="note" style="line-height:1.9">
+          <span class="kbd">→</span> 下一階段　<span class="kbd">←</span> 上一階段　<span class="kbd">空白</span> 暫停／繼續<br>
+          <span class="kbd">M</span> 小眼放大鏡　<span class="kbd">F</span> 全螢幕
+        </div>
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:20px;flex-wrap:wrap">
+      <button class="btn peach" id="startBtn" style="font-size:1.2rem;padding:.7em 1.6em">開始值班 ▶</button>
+    </div>
+  </div>
+</section>
+
+<!-- ======================= GAME ======================= -->
+<section id="game" class="hidden">
+  <div class="hud">
+    <div class="phase-name" id="phaseName">交班小劇場</div>
+    <div class="stepper" id="stepper"></div>
+    <div class="timer-num" id="timerNum">1:00</div>
+  </div>
+  <div class="pop"><div class="pop-stick"></div><div class="pop-track"><div class="pop-fill" id="popFill"><i class="drip"></i><i class="drip d2"></i></div></div></div>
+
+  <div class="stage-wrap">
+    <div class="stage" id="stage">
+      <svg class="scene" id="sceneSvg" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid meet" aria-label="病房場景"></svg>
+      <div class="overlay hidden" id="comic"></div>
+      <div class="overlay hidden" id="freeze">
+        <div class="ice-word">FREEZE 凍結！</div>
+        <div class="freeze-q">
+          <div class="clay"><span class="lvl">L1</span><b>你看到什麼？</b>寫下病房裡的異常線索（至少 5 項）</div>
+          <div class="clay"><span class="lvl">L2</span><b>這代表什麼？</b>整合 2 個以上線索，說出可能的臨床問題</div>
+          <div class="clay"><span class="lvl">L3</span><b>接下來會怎樣？</b>預測 10 分鐘內的事件＋你的第一個措施</div>
+        </div>
+      </div>
+      <div class="overlay hidden" id="clockFx">
+        <svg viewBox="0 0 300 300" aria-hidden="true">
+          <circle cx="150" cy="150" r="130" fill="#F6EFE3" stroke="#E2C08F" stroke-width="18"/>
+          <g id="ticks"></g>
+          <rect class="spin2" x="144" y="70" width="12" height="84" rx="6" fill="#5A4636"/>
+          <rect class="spin" x="146" y="40" width="8" height="114" rx="4" fill="#D97A73"/>
+          <circle cx="150" cy="150" r="12" fill="#5A4636"/>
+        </svg>
+        <div class="big-msg">時鐘爺爺轉動指針……10 分鐘後</div>
+      </div>
+      <div class="banner hidden" id="banner"></div>
+      <div class="hidden" id="review"></div>
+    </div>
+    <aside class="side" id="side"></aside>
+  </div>
+
+  <div class="toolbar">
+    <button class="btn ghost" id="homeBtn" title="回到設定">⌂</button>
+    <button class="btn ghost" id="prevBtn">◀ 上一步</button>
+    <button class="btn" id="pauseBtn">❚❚ 暫停</button>
+    <button class="btn mint" id="nextBtn">下一步 ▶</button>
+    <div class="abil" id="abilities"></div>
+    <span class="sp"></span>
+    <button class="btn ghost" id="soundBtn">音效：開</button>
+    <button class="btn ghost" id="fsBtn">全螢幕</button>
+  </div>
+</section>
+
+<div id="lens" class="hidden"><svg id="lensSvg" viewBox="0 0 300 300"><use href="#sceneRoot"/></svg></div>
+<div id="lensTime" class="hidden"></div>
+<div id="modal" class="hidden"><div class="clay" id="modalBody"></div></div>
+
+<script>
+/* =========================================================
+   資料：角色、關卡
+   ========================================================= */
+const TEAM_COLORS=['#F4A6A0','#9ED8C6','#F2D27A','#A9D4F5','#C9B3E6','#F39C5A'];
+const ROLES=[
+  {key:'eye',name:'小眼',title:'觀察者',ability:'放大鏡：放大一個區域 10 秒',task:'主答 L1',acc:'glasses'},
+  {key:'brain',name:'小腦',title:'推理者',ability:'翻閱一張「病歷片段卡」',task:'主答 L2',acc:'brain'},
+  {key:'clock',name:'小鐘',title:'預言者',ability:'偷看「未來快訊」一句話',task:'主答 L3',acc:'watch'},
+  {key:'ear',name:'小耳',title:'溝通者',ability:'對病人或家屬加問一題',task:'負責聽到的線索',acc:'ears'},
+];
+
+const CASES=[
+  {
+    id:'slippers', no:1, name:'夜班的拖鞋', level:'進階（銀時鐘）', ready:true,
+    patient:'圓圓阿公，82 歲男性，右側股骨頸骨折術後第 1 天',
+    shift:'夜班 02:00',
+    comic:[
+      {who:'白班護理師',say:'「阿公白天都很乖，也很少喊痛。」',scene:'handover'},
+      {who:'糯糯（女兒）',say:'低頭看手機，提著行李。',scene:'daughter'},
+      {who:'',say:'夜深的走廊，病房燈光微弱。',scene:'corridor'},
+      {who:'糯糯',say:'「我先回家拿東西，他今天怎麼怪怪的……」',scene:'leave'},
+    ],
+    clues:[ // x,y 在 1600x900 場景座標
+      {n:1,type:'true',text:'呼吸 24 次／分、脈搏 108',where:'床邊監視器',lvl:'明顯',x:860,y:300,r:120},
+      {n:2,type:'true',text:'拉扯點滴管路、眼神飄忽',where:'病人手部與表情',lvl:'明顯',x:640,y:440,r:120},
+      {n:3,type:'true',text:'床欄只拉起一側（靠牆側），外側放下',where:'病床',lvl:'明顯',x:980,y:575,r:105},
+      {n:4,type:'true',text:'拖鞋放在床邊、地上有水漬',where:'床邊地板',lvl:'隱晦',x:860,y:735,r:120},
+      {n:5,type:'true',text:'尿袋尿量很少、顏色深',where:'床尾',lvl:'隱晦',x:1125,y:640,r:80},
+      {n:6,type:'true',text:'床旁沒有陪伴者、呼叫鈴掉在地上',where:'床頭櫃下／陪客椅',lvl:'明顯',x:380,y:700,r:95},
+      {n:7,type:'hidden',text:'床頭卡寫著「睡前加一顆安眠藥」',where:'床頭卡小字',lvl:'高',x:615,y:305,r:80},
+      {n:8,type:'distr',text:'床頭的花束、開著的電視（干擾項）',where:'床頭櫃、牆上',lvl:'—',x:1320,y:170,r:110},
+    ],
+    diffs:['阿公坐到床緣，一隻腳踩在水漬上','點滴管被拔出，掛在床欄上','監視器血壓 132/78 → 98/60','阿公臉色變灰、表情變淡'],
+    answer:{
+      L2:'術後譫妄，可能合併脫水或早期感染；加上安眠藥、無人陪伴、地滑，跌倒風險極高。',
+      L3:'10 分鐘內病人自行下床，在水漬處滑倒，手術部位再次受傷。',
+      act:'立即留在床邊、降低床高、拉起兩側床欄、擦乾地面、呼叫鈴放回手邊，再通知醫師評估譫妄與生命徵象。'
+    },
+    nearMiss:'如果注意到「拖鞋＋水漬」和「只拉起一側床欄」，就是完美救援。',
+    trivia:'真實世界中，住院高齡骨折病人中譫妄很常見，而夜間是跌倒的高峰時段。',
+    cards:{
+      brain:{title:'病歷片段卡',body:'POD 1｜右股骨頸骨折術後<br>昨日 I/O：輸入 900 mL／輸出 350 mL<br>22:00 體溫 37.8 °C<br>護理紀錄：「白天安靜，少主動說話」'},
+      clock:{title:'未來快訊',body:'「02:10，病房裡會傳來『啪』的一聲。」'},
+      ear:{title:'加問一題',options:[
+        {q:'問阿公：「阿公，你現在在哪裡？」',a:'阿公：「我要回家……我要去廁所，鞋子呢？」'},
+        {q:'打電話問糯糯：「阿公平常晚上會這樣嗎？」',a:'糯糯：「不會耶，他在家晚上都睡得很好，今天下午就開始講話顛三倒四。」'},
+      ]},
+    },
+    surprises:['呼叫鈴連響：隔壁床要換點滴（請在 90 秒內維持觀察）','新病人住院：你被叫去推床 10 秒（主持人遮住畫面 10 秒）','電話響起：檢驗科回報隔壁床報告'],
+  },
+  {id:'candy',no:2,name:'安靜的糖果罐',level:'低血糖',ready:false},
+  {id:'gauze',no:3,name:'變重的紗布',level:'術後出血',ready:false},
+  {id:'cup',no:4,name:'空空的水杯',level:'早期敗血症',ready:false},
+  {id:'drip',no:5,name:'流太快的點滴',level:'輸液速率',ready:false},
+  {id:'secret',no:6,name:'糯糯的秘密',level:'自行加藥',ready:false},
+];
+
+const PHASES=[
+  {key:'comic',  name:'交班小劇場', dur:60,  step:'交班'},
+  {key:'observe',name:'進房觀察',   dur:90,  step:'觀察 90 秒'},
+  {key:'freeze', name:'凍結作答',   dur:180, step:'凍結'},
+  {key:'forward',name:'時間快轉',   dur:60,  step:'快轉'},
+  {key:'diff',   name:'找不同',     dur:60,  step:'找不同'},
+  {key:'review', name:'結局與復盤', dur:240, step:'結局復盤'},
+];
+
+/* =========================================================
+   狀態（主持人瀏覽器內保存，方便重新整理後繼續）
+   ========================================================= */
+const S={teams:['薄荷隊','蜜桃隊','南瓜隊'],caseId:'slippers',round:1,history:[],scores:{},phase:0,remain:60,running:false,sound:true,usedAbil:{}};
+function save(){try{localStorage.setItem('freeze90',JSON.stringify({teams:S.teams,history:S.history,round:S.round,sound:S.sound}))}catch(e){}}
+function load(){try{const d=JSON.parse(localStorage.getItem('freeze90')||'null');if(d){Object.assign(S,d)}}catch(e){}}
+load();
+const C=()=>CASES.find(c=>c.id===S.caseId);
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+/* =========================================================
+   黏土角色 SVG
+   ========================================================= */
+function person({x=0,y=0,s=1,skin='#F2C9A8',outfit='#9ED8C6',hair='#5A4636',acc='',expr='smile',cap=true,flip=false}={}){
+  const eyes = expr==='confused'
+    ? `<circle cx="-15" cy="-4" r="7" fill="#fff"/><circle cx="15" cy="-4" r="7" fill="#fff"/><circle cx="-19" cy="-7" r="3.6" fill="#3b2c22"/><circle cx="19" cy="-1" r="3.6" fill="#3b2c22"/><path d="M-24 -18 q8 -6 16 0 M8 -16 q8 4 16 -2" stroke="#3b2c22" stroke-width="3" fill="none" stroke-linecap="round"/>`
+    : expr==='worried'
+    ? `<circle cx="-14" cy="-2" r="4.5" fill="#3b2c22"/><circle cx="14" cy="-2" r="4.5" fill="#3b2c22"/><path d="M-22 -14 l14 4 M22 -14 l-14 4" stroke="#3b2c22" stroke-width="3" stroke-linecap="round"/>`
+    : `<circle cx="-14" cy="-2" r="4.5" fill="#3b2c22"/><circle cx="14" cy="-2" r="4.5" fill="#3b2c22"/><circle cx="-12.5" cy="-3.5" r="1.4" fill="#fff"/><circle cx="15.5" cy="-3.5" r="1.4" fill="#fff"/>`;
+  const mouth = expr==='smile' ? `<path d="M-8 12 q8 8 16 0" stroke="#3b2c22" stroke-width="3" fill="none" stroke-linecap="round"/>`
+    : expr==='confused' ? `<ellipse cx="2" cy="15" rx="5" ry="4" fill="#3b2c22"/>`
+    : `<path d="M-7 15 q7 -5 14 0" stroke="#3b2c22" stroke-width="3" fill="none" stroke-linecap="round"/>`;
+  let a='';
+  if(acc==='glasses') a=`<g stroke="#5A4636" stroke-width="3.5" fill="#ffffff55"><circle cx="-14" cy="-2" r="11"/><circle cx="14" cy="-2" r="11"/><path d="M-3 -2 h6" /></g>`;
+  if(acc==='brain') a=`<g transform="translate(0,-62)"><path d="M-22 6 q-6 -18 10 -22 q6 -10 16 -2 q14 -6 18 8 q10 6 0 18 z" fill="#F4A6A0" stroke="#D97A73" stroke-width="2.5"/><path d="M-10 -6 q6 4 0 10 M6 -10 q-4 8 4 12" stroke="#D97A73" stroke-width="2.5" fill="none"/></g>`;
+  if(acc==='watch') a=`<g transform="translate(0,64)"><path d="M-18 -26 Q0 -6 18 -26" stroke="#c69f6a" stroke-width="3" fill="none"/><circle r="13" fill="#F2D27A" stroke="#c69f6a" stroke-width="3"/><path d="M0 0 v-7 M0 0 h5" stroke="#5A4636" stroke-width="2.5" stroke-linecap="round"/></g>`;
+  if(acc==='ears') a=`<ellipse cx="-44" cy="0" rx="13" ry="20" fill="${skin}" stroke="#0000001a" stroke-width="2"/><ellipse cx="44" cy="0" rx="13" ry="20" fill="${skin}" stroke="#0000001a" stroke-width="2"/>`;
+  const capSvg = cap ? `<path d="M-24 -40 q24 -14 48 0 l-4 12 h-40 z" fill="#fff" stroke="#e5dccd" stroke-width="2"/><path d="M-4 -38 h8 M0 -42 v8" stroke="#F4A6A0" stroke-width="3" stroke-linecap="round"/>` : '';
+  return `<g transform="translate(${x},${y}) scale(${flip?-s:s},${s})" filter="url(#clay)">
+    <ellipse cx="0" cy="118" rx="40" ry="9" fill="#00000022"/>
+    <path d="M-34 110 q-4 -60 34 -64 q38 4 34 64 z" fill="${outfit}"/>
+    <path d="M-10 52 l10 12 l10 -12" stroke="#ffffff99" stroke-width="3" fill="none"/>
+    ${acc==='ears'?a:''}
+    <circle cx="0" cy="0" r="42" fill="${skin}"/>
+    <path d="M-42 -4 q2 -40 42 -42 q40 2 42 42 q-10 -22 -42 -24 q-32 2 -42 24z" fill="${hair}"/>
+    ${capSvg}
+    <ellipse cx="-24" cy="12" rx="7" ry="4.5" fill="#F4A6A0" opacity=".7"/><ellipse cx="24" cy="12" rx="7" ry="4.5" fill="#F4A6A0" opacity=".7"/>
+    ${eyes}${mouth}${acc!=='ears'?a:''}
+  </g>`;
+}
+const GLOBAL_DEFS=`<defs>
+  <filter id="clay" x="-10%" y="-10%" width="120%" height="125%">
+    <feTurbulence type="fractalNoise" baseFrequency=".75" numOctaves="2" seed="7" result="n"/>
+    <feDiffuseLighting in="n" surfaceScale="1.4" lighting-color="#ffffff" result="l"><feDistantLight azimuth="235" elevation="58"/></feDiffuseLighting>
+    <feComponentTransfer in="l" result="l2"><feFuncR type="linear" slope=".35" intercept=".68"/><feFuncG type="linear" slope=".35" intercept=".68"/><feFuncB type="linear" slope=".35" intercept=".68"/></feComponentTransfer>
+    <feComposite in="l2" in2="SourceGraphic" operator="arithmetic" k1="1" k2="0" k3="0" k4="0" result="tex"/>
+    <feComposite in="tex" in2="SourceAlpha" operator="in" result="tex2"/>
+    <feDropShadow in="tex2" dx="0" dy="5" stdDeviation="4" flood-color="#2a1d12" flood-opacity=".28"/>
+  </filter>
+  <radialGradient id="lamp" cx="22%" cy="88%" r="60%"><stop offset="0" stop-color="#FFD9A0" stop-opacity=".45"/><stop offset="1" stop-color="#FFD9A0" stop-opacity="0"/></radialGradient>
+  <radialGradient id="vign" cx="50%" cy="50%" r="75%"><stop offset=".55" stop-color="#0b1022" stop-opacity="0"/><stop offset="1" stop-color="#0b1022" stop-opacity=".4"/></radialGradient>
+  <linearGradient id="puddle" x1="0" x2="1"><stop offset="0" stop-color="#cfe7f7" stop-opacity=".85"/><stop offset="1" stop-color="#9cc6e6" stop-opacity=".7"/></linearGradient>
+</defs>`;
+const DEFS='';
+document.body.insertAdjacentHTML('afterbegin',`<svg width="0" height="0" style="position:absolute" aria-hidden="true">${GLOBAL_DEFS}</svg>`);
+
+/* =========================================================
+   病房場景（before / after）
+   ========================================================= */
+function wardScene(after=false){
+  const C1=C();
+  const skin = after ? '#CFC6BC' : '#F0C6A4';
+  const bp = after ? '98/60' : '132/78';
+  // grandpa in bed (before) or sitting at edge (after)
+  const grandpaBed = `
+    <g filter="url(#clay)">
+      <!-- arm reaching to IV -->
+      <path d="M660 500 q30 -30 40 -62" stroke="${skin}" stroke-width="26" stroke-linecap="round" fill="none"/>
+      <circle cx="702" cy="436" r="17" fill="${skin}"/>
+      <circle cx="610" cy="420" r="58" fill="${skin}"/>
+      <path d="M560 400 q10 -40 50 -40 q40 0 50 40 q-14 -18 -50 -18 q-36 0 -50 18z" fill="#EDEAE4"/>
+      <ellipse cx="586" cy="424" rx="10" ry="10" fill="#fff"/><ellipse cx="632" cy="424" rx="10" ry="10" fill="#fff"/>
+      <circle cx="580" cy="419" r="5" fill="#3b2c22"/><circle cx="638" cy="429" r="5" fill="#3b2c22"/>
+      <path d="M572 402 q12 -8 22 0 M622 406 q10 6 22 -2" stroke="#3b2c22" stroke-width="4" fill="none" stroke-linecap="round"/>
+      <ellipse cx="612" cy="456" rx="8" ry="6" fill="#3b2c22"/>
+      <ellipse cx="572" cy="440" rx="9" ry="5" fill="#F4A6A0" opacity=".5"/><ellipse cx="652" cy="440" rx="9" ry="5" fill="#F4A6A0" opacity=".5"/>
+    </g>`;
+  const grandpaSit = `
+    <g filter="url(#clay)">
+      <!-- legs down to floor, foot on puddle -->
+      <path d="M865 600 q-4 70 6 128" stroke="#BFD8EA" stroke-width="30" stroke-linecap="round" fill="none"/>
+      <path d="M905 600 q20 60 38 112" stroke="#BFD8EA" stroke-width="30" stroke-linecap="round" fill="none"/>
+      <ellipse cx="880" cy="736" rx="24" ry="11" fill="${skin}"/>
+      <ellipse cx="952" cy="718" rx="22" ry="10" fill="${skin}"/>
+      <path d="M842 610 q-6 -96 46 -100 q52 4 46 100 z" fill="#BFD8EA"/>
+      <path d="M868 520 l20 18 l20 -18" stroke="#ffffffaa" stroke-width="3" fill="none"/>
+      <circle cx="888" cy="452" r="56" fill="${skin}"/>
+      <path d="M840 434 q10 -38 48 -38 q38 0 48 38 q-14 -16 -48 -16 q-34 0 -48 16z" fill="#E4E1DC"/>
+      <circle cx="866" cy="456" r="5" fill="#3b2c22"/><circle cx="910" cy="456" r="5" fill="#3b2c22"/>
+      <path d="M876 486 h24" stroke="#3b2c22" stroke-width="4" stroke-linecap="round"/>
+      <!-- hand on mattress -->
+      <circle cx="830" cy="560" r="16" fill="${skin}"/>
+    </g>`;
+  const ivLine = after
+    ? `<path d="M478 248 C 470 500, 640 540, 720 470 S 770 470, 760 520" stroke="#e8f2f8" stroke-width="5" fill="none" opacity=".95"/>
+       <circle cx="760" cy="524" r="5" fill="#cde3f2"/><path d="M760 530 v14" stroke="#cde3f2" stroke-width="3" stroke-dasharray="3 5"/>`
+    : `<path d="M478 248 C 470 500, 660 520, 700 448" stroke="#e8f2f8" stroke-width="5" fill="none" opacity=".95"/>
+       <path d="M690 462 l-12 4 M696 452 l-12 -2" stroke="#e8f2f8" stroke-width="3" opacity=".8"/>`;
+  return `${DEFS}
+  <g id="sceneRoot">
+    <!-- wall & floor -->
+    <rect width="1600" height="900" fill="#E9DFCF"/>
+    <rect width="1600" height="580" fill="#F1E8DA"/>
+    <path d="M0 580 H1600 V900 H0z" fill="#D9CCB8"/>
+    <path d="M0 580 H1600" stroke="#C9B79E" stroke-width="14"/>
+    <g opacity=".35" stroke="#c8b9a2" stroke-width="3">${Array.from({length:9},(_,i)=>`<path d="M${i*200-100} 900 L${i*200+60} 588"/>`).join('')}<path d="M0 700 H1600"/><path d="M0 800 H1600"/></g>
+
+    <!-- window with moon -->
+    <g filter="url(#clay)">
+      <rect x="80" y="80" width="250" height="250" rx="34" fill="#E2C08F"/>
+      <rect x="98" y="98" width="214" height="214" rx="24" fill="#33406A"/>
+      <circle cx="250" cy="150" r="32" fill="#FFF3C9"/><circle cx="236" cy="142" r="30" fill="#33406A"/>
+      <circle cx="150" cy="190" r="4" fill="#fff8"/><circle cx="200" cy="250" r="3" fill="#fff8"/><circle cx="280" cy="260" r="4" fill="#fff8"/>
+      <path d="M205 98 V312 M98 205 H312" stroke="#E2C08F" stroke-width="12"/>
+    </g>
+
+    <!-- wall clock 02:00 -->
+    <g filter="url(#clay)" transform="translate(470,140)">
+      <circle r="52" fill="#FFFBF4" stroke="#E2C08F" stroke-width="10"/>
+      <path d="M0 0 L22 -13" stroke="#5A4636" stroke-width="7" stroke-linecap="round"/>
+      <path d="M0 0 V-38" stroke="#5A4636" stroke-width="5" stroke-linecap="round"/>
+      <circle r="6" fill="#D97A73"/>
+    </g>
+
+    <!-- TV (distractor) -->
+    <g filter="url(#clay)">
+      <rect x="1180" y="70" width="290" height="190" rx="30" fill="#6E6A73"/>
+      <rect x="1198" y="88" width="254" height="154" rx="20" fill="#4E6A8A"/>
+      <circle cx="1290" cy="170" r="34" fill="#F2D27A"/><path d="M1340 214 q30 -60 70 -40 q20 10 30 40z" fill="#9ED8C6"/>
+      <rect x="1300" y="260" width="50" height="30" rx="8" fill="#6E6A73"/>
+    </g>
+
+    <!-- bed card on wall (hidden clue) -->
+    <g filter="url(#clay)">
+      <rect x="555" y="270" width="120" height="74" rx="12" fill="#FFFBF4"/>
+      <rect x="555" y="270" width="120" height="18" rx="8" fill="#9ED8C6"/>
+      <text x="566" y="310" font-size="17" font-weight="800" fill="#5A4636" font-family="sans-serif">圓圓 82y</text>
+      <text x="566" y="330" font-size="10.5" fill="#6d5a4a" font-family="sans-serif">睡前加一顆安眠藥</text>
+    </g>
+
+    <!-- monitor -->
+    <g filter="url(#clay)">
+      <rect x="840" y="378" width="18" height="70" rx="8" fill="#B8AFA6"/>
+      <rect x="745" y="220" width="230" height="165" rx="28" fill="#8F8A94"/>
+      <rect x="762" y="236" width="196" height="132" rx="18" fill="#22304A"/>
+      <path d="M772 270 h26 l8 -16 l10 30 l8 -14 h30 l8 -16 l10 30 l8 -14 h32" stroke="#9ED8C6" stroke-width="4" fill="none" stroke-linejoin="round"/>
+      <text x="772" y="318" font-size="24" font-weight="900" fill="#9ED8C6" font-family="sans-serif">HR 108</text>
+      <text x="870" y="318" font-size="24" font-weight="900" fill="#F2D27A" font-family="sans-serif">RR 24</text>
+      <text x="772" y="352" font-size="22" font-weight="900" fill="#F4A6A0" font-family="sans-serif">BP ${bp}</text>
+      <text x="900" y="352" font-size="18" font-weight="800" fill="#A9D4F5" font-family="sans-serif">SpO₂ 95</text>
+    </g>
+
+    <!-- bedside table + flowers (distractor) + fallen call bell -->
+    <g filter="url(#clay)">
+      <rect x="290" y="470" width="170" height="40" rx="14" fill="#E2C08F"/>
+      <rect x="302" y="505" width="146" height="110" rx="14" fill="#D6B07C"/>
+      <rect x="318" y="526" width="114" height="20" rx="8" fill="#c69f6a"/>
+      <rect x="306" y="612" width="18" height="44" rx="6" fill="#c69f6a"/><rect x="426" y="612" width="18" height="44" rx="6" fill="#c69f6a"/>
+      <rect x="352" y="412" width="44" height="62" rx="16" fill="#A9D4F5"/>
+      <path d="M374 414 q-20 -40 -40 -50 M374 414 q0 -50 4 -64 M374 414 q22 -36 44 -44" stroke="#5FAE96" stroke-width="5" fill="none"/>
+      <circle cx="334" cy="360" r="17" fill="#F4A6A0"/><circle cx="378" cy="344" r="18" fill="#F2D27A"/><circle cx="420" cy="368" r="17" fill="#F4A6A0"/>
+      <circle cx="334" cy="360" r="6" fill="#fff8"/><circle cx="378" cy="344" r="6" fill="#fff8"/><circle cx="420" cy="368" r="6" fill="#fff8"/>
+    </g>
+    <g filter="url(#clay)">
+      <path d="M470 540 C 470 640, 420 690, 380 700" stroke="#8A7462" stroke-width="5" fill="none"/>
+      <rect x="340" y="690" width="62" height="30" rx="14" fill="#F4A6A0" transform="rotate(-12 371 705)"/>
+      <circle cx="378" cy="700" r="8" fill="#D97A73"/>
+    </g>
+
+    <!-- IV pole + bag -->
+    <g filter="url(#clay)">
+      <rect x="472" y="150" width="12" height="520" rx="6" fill="#B8AFA6"/>
+      <path d="M430 160 h96" stroke="#B8AFA6" stroke-width="10" stroke-linecap="round"/>
+      <rect x="452" y="168" width="52" height="80" rx="18" fill="#E8F2F8"/>
+      <rect x="458" y="206" width="40" height="38" rx="12" fill="#CDE3F2"/>
+      <path d="M446 680 h66" stroke="#8F8A94" stroke-width="12" stroke-linecap="round"/>
+    </g>
+
+    <!-- bed: far rail (raised), mattress, blanket, near rail (lowered) -->
+    <g filter="url(#clay)">
+      <rect x="505" y="360" width="38" height="290" rx="16" fill="#E2C08F"/>
+      <!-- far-side rail RAISED -->
+      <rect x="700" y="420" width="330" height="22" rx="11" fill="#C9C2B8"/>
+      <rect x="712" y="440" width="10" height="44" rx="5" fill="#C9C2B8"/><rect x="1008" y="440" width="10" height="44" rx="5" fill="#C9C2B8"/>
+      <rect x="836" y="440" width="10" height="44" rx="5" fill="#C9C2B8"/>
+      <rect x="540" y="472" width="640" height="78" rx="32" fill="#FFFBF4"/>
+      <rect x="548" y="540" width="626" height="54" rx="20" fill="#B8AFA6"/>
+      <rect x="580" y="592" width="16" height="70" rx="6" fill="#8F8A94"/><rect x="1130" y="592" width="16" height="70" rx="6" fill="#8F8A94"/>
+      <circle cx="588" cy="668" r="16" fill="#5A4636"/><circle cx="1138" cy="668" r="16" fill="#5A4636"/>
+      <rect x="1158" y="420" width="34" height="230" rx="15" fill="#E2C08F"/>
+      <!-- pillow -->
+      <ellipse cx="605" cy="468" rx="78" ry="34" fill="#F6EFE3"/>
+    </g>
+    ${after ? '' : grandpaBed}
+    <g filter="url(#clay)">
+      ${after
+        ? `<path d="M760 486 q140 -40 300 -6 q90 18 116 24 q8 40 -10 54 h-380 q-40 -30 -26 -72z" fill="#9ED8C6"/>
+           <path d="M1000 500 q60 -10 120 10" stroke="#ffffff88" stroke-width="5" fill="none"/>`
+        : `<path d="M640 480 q120 -70 260 -50 q170 14 270 50 q10 40 -6 74 h-532 q-20 -40 8 -74z" fill="#9ED8C6"/>
+           <path d="M700 470 q100 -30 200 -24 M900 452 q120 6 220 36" stroke="#ffffff88" stroke-width="5" fill="none"/>
+           <ellipse cx="1080" cy="470" rx="70" ry="30" fill="#8ccdb9"/>`}
+    </g>
+    <!-- near-side rail LOWERED -->
+    <g filter="url(#clay)">
+      <rect x="700" y="598" width="330" height="20" rx="10" fill="#C9C2B8"/>
+      <rect x="712" y="580" width="10" height="24" rx="5" fill="#C9C2B8"/><rect x="1008" y="580" width="10" height="24" rx="5" fill="#C9C2B8"/>
+    </g>
+    ${ivLine}
+    ${after ? grandpaSit : ''}
+
+    <!-- urine bag at foot: little, dark -->
+    <g filter="url(#clay)">
+      <path d="M1100 560 h56" stroke="#8F8A94" stroke-width="6" stroke-linecap="round"/>
+      <path d="M1128 540 C 1120 480, 1110 500, 1100 520" stroke="#E5D9B5" stroke-width="5" fill="none"/>
+      <rect x="1094" y="566" width="68" height="94" rx="16" fill="#F4F1EA" opacity=".95"/>
+      <rect x="1100" y="632" width="56" height="22" rx="9" fill="#B5722C"/>
+      <path d="M1104 588 h18 M1104 604 h18 M1104 620 h18" stroke="#c9bfb0" stroke-width="2.5"/>
+    </g>
+
+    <!-- slippers + puddle -->
+    <ellipse cx="${after?905:900}" cy="738" rx="104" ry="24" fill="url(#puddle)"/>
+    <path d="M840 732 q30 -8 60 0" stroke="#ffffffcc" stroke-width="4" fill="none" stroke-linecap="round"/>
+    <g filter="url(#clay)">
+      <ellipse cx="770" cy="722" rx="42" ry="17" fill="#F4A6A0" transform="rotate(-8 770 722)"/>
+      <path d="M744 716 q22 -18 46 -4" stroke="#D97A73" stroke-width="10" fill="none" stroke-linecap="round"/>
+      <ellipse cx="${after?690:820}" cy="${after?748:744}" rx="42" ry="17" fill="#F4A6A0" transform="rotate(10 ${after?690:820} ${after?748:744})"/>
+      <path d="M${after?664:794} ${after?742:738} q22 -18 46 -4" stroke="#D97A73" stroke-width="10" fill="none" stroke-linecap="round"/>
+    </g>
+
+    <!-- empty visitor chair -->
+    <g filter="url(#clay)">
+      <rect x="1290" y="440" width="150" height="170" rx="36" fill="#F2D27A"/>
+      <rect x="1270" y="590" width="200" height="56" rx="24" fill="#E8C35E"/>
+      <rect x="1290" y="640" width="18" height="80" rx="7" fill="#c69f6a"/><rect x="1432" y="640" width="18" height="80" rx="7" fill="#c69f6a"/>
+    </g>
+
+    <!-- night lighting -->
+    <rect width="1600" height="900" fill="#1b2547" opacity=".16" style="mix-blend-mode:multiply"/>
+    <rect width="1600" height="900" fill="url(#lamp)"/>
+    <rect width="1600" height="900" fill="url(#vign)"/>
+  </g>
+  <g id="hotspots" class="hidden">
+    ${C1.clues.map(c=>`<g class="hot ${c.type==='distr'?'distr':c.type==='hidden'?'hidden-clue':''}"><circle class="ring" cx="${c.x}" cy="${c.y}" r="${c.r}"/>
+      <rect x="${c.x+c.r*0.62-22}" y="${c.y-c.r*0.8-22}" width="44" height="44" rx="22"/>
+      <text x="${c.x+c.r*0.62}" y="${c.y-c.r*0.8+9}" text-anchor="middle">${c.n}</text></g>`).join('')}
+  </g>`;
+}
+
+/* 四格漫畫小場景 */
+function comicScene(kind){
+  const bg = kind==='corridor' ? '#33406A' : '#F6EFE3';
+  let body='';
+  if(kind==='handover'){
+    body=`<rect x="0" y="210" width="400" height="90" fill="#E2C08F"/><rect x="20" y="180" width="360" height="40" rx="14" fill="#D6B07C" filter="url(#clay)"/>
+      ${person({x:120,y:120,s:.72,outfit:'#9ED8C6',expr:'smile'})}${person({x:285,y:120,s:.72,outfit:'#A9D4F5',hair:'#7a5a44',expr:'smile',flip:true})}
+      <rect x="170" y="150" width="56" height="40" rx="8" fill="#FFFBF4" filter="url(#clay)"/>`;
+  }else if(kind==='daughter'){
+    body=`${person({x:200,y:110,s:.85,outfit:'#F4A6A0',hair:'#3b2c22',cap:false,expr:'worried'})}
+      <g filter="url(#clay)"><rect x="232" y="150" width="34" height="50" rx="8" fill="#5A4636"/><rect x="236" y="155" width="26" height="36" rx="5" fill="#A9D4F5"/></g>
+      <g fill="#fff" opacity=".85">${[0,1,2,3,4,5].map(i=>`<circle cx="${172+(i%3)*28}" cy="${195+Math.floor(i/3)*24}" r="5"/>`).join('')}</g>
+      <rect x="80" y="170" width="72" height="62" rx="18" fill="#C9B3E6" filter="url(#clay)"/><path d="M98 172 q18 -26 36 0" stroke="#a48cc7" stroke-width="7" fill="none"/>`;
+  }else if(kind==='corridor'){
+    body=`<path d="M0 300 L150 150 H250 L400 300z" fill="#4a557e"/><path d="M150 150 V40 H250 V150" fill="#3d4870"/>
+      <rect x="40" y="60" width="70" height="120" rx="12" fill="#2a3358"/><rect x="290" y="60" width="70" height="120" rx="12" fill="#2a3358"/>
+      <rect x="300" y="72" width="50" height="96" rx="8" fill="#F2D27A" opacity=".35"/>
+      <circle cx="200" cy="30" r="10" fill="#FFF3C9" opacity=".6"/><circle cx="200" cy="30" r="40" fill="#FFF3C9" opacity=".08"/>`;
+  }else{
+    body=`<rect x="0" y="230" width="400" height="70" fill="#D9CCB8"/>
+      <rect x="20" y="150" width="210" height="90" rx="30" fill="#FFFBF4" filter="url(#clay)"/><circle cx="70" cy="150" r="34" fill="#F0C6A4" filter="url(#clay)"/>
+      <circle cx="60" cy="146" r="4" fill="#3b2c22"/><circle cx="82" cy="142" r="4" fill="#3b2c22"/>
+      <path d="M90 178 q50 -30 130 -10 v40 h-140z" fill="#9ED8C6" filter="url(#clay)"/>
+      ${person({x:320,y:110,s:.78,outfit:'#F4A6A0',hair:'#3b2c22',cap:false,expr:'worried'})}`;
+  }
+  return `${DEFS}<rect width="400" height="300" fill="${bg}"/>${body}`;
+}
+
+/* =========================================================
+   開始畫面
+   ========================================================= */
+function renderStart(){
+  const box=$('#teamInputs');
+  box.innerHTML=S.teams.map((t,i)=>`<div class="team-row"><span class="dot" style="background:${TEAM_COLORS[i]}"></span><input value="${esc(t)}" data-i="${i}" maxlength="10" aria-label="第 ${i+1} 隊名稱"></div>`).join('');
+  box.querySelectorAll('input').forEach(inp=>inp.oninput=e=>{S.teams[+e.target.dataset.i]=e.target.value||`第${+e.target.dataset.i+1}隊`;save()});
+  $('#roleCards').innerHTML=ROLES.map(r=>`<div class="role"><svg viewBox="-60 -80 120 210">${DEFS}${person({acc:r.acc,outfit:'#9ED8C6',expr:'smile'})}</svg><b>${r.name}</b>${r.title}<br><span class="note">${r.ability}</span></div>`).join('');
+  $('#caseSel').innerHTML=CASES.map(c=>`<button class="btn ${c.id===S.caseId?'peach':''}" ${c.ready?'':'disabled'} data-c="${c.id}">${c.no}. ${c.name}</button>`).join('');
+  $('#caseSel').querySelectorAll('button').forEach(b=>b.onclick=()=>{S.caseId=b.dataset.c;renderStart()});
+}
+$('#addTeam').onclick=()=>{if(S.teams.length<6){S.teams.push(['薄荷隊','蜜桃隊','南瓜隊','冰藍隊','葡萄隊','橘子隊'][S.teams.length]);save();renderStart()}};
+$('#rmTeam').onclick=()=>{if(S.teams.length>3){S.teams.pop();save();renderStart()}};
+$('#startBtn').onclick=()=>{initAudio();startRound()};
+$('#homeBtn').onclick=()=>{stopTimer();$('#game').classList.add('hidden');$('#start').classList.remove('hidden');renderStart()};
+
+/* =========================================================
+   遊戲流程
+   ========================================================= */
+function startRound(){
+  S.scores={};S.usedAbil={};
+  S.teams.forEach((t,i)=>S.scores[i]={l1:0,distr:0,l2:false,l3:false,act:false,diff:0,early:false,hidden:false});
+  $('#start').classList.add('hidden');$('#game').classList.remove('hidden');
+  goPhase(0);
+}
+function goPhase(i){
+  S.phase=Math.max(0,Math.min(PHASES.length-1,i));
+  const P=PHASES[S.phase];
+  S.remain=P.dur; S.total=P.dur;
+  $('#phaseName').textContent=`第 ${S.round} 局 · ${P.name}`;
+  $('#stepper').innerHTML=PHASES.map((p,k)=>`<span class="step ${k===S.phase?'on':k<S.phase?'done':''}">${p.step}</span>`).join('');
+  ['comic','freeze','clockFx','review','banner'].forEach(id=>$('#'+id).classList.add('hidden'));
+  $('#stage').classList.remove('review-mode');
+  $('#sceneSvg').innerHTML='';
+  hideLens();
+  const c=C();
+  if(P.key==='comic'){
+    $('#comic').innerHTML=c.comic.map((p,k)=>`<div class="panel4"><svg viewBox="0 0 400 300" preserveAspectRatio="xMidYMid slice">${comicScene(p.scene)}</svg><span class="pnum">${k+1}</span><div class="bubble">${p.who?`<small>${esc(p.who)}</small>`:''}${esc(p.say)}</div></div>`).join('');
+    $('#comic').classList.remove('hidden');
+    $('#comic').querySelectorAll('.panel4').forEach((el,k)=>setTimeout(()=>el.classList.add('show'),300+k*1400));
+  }
+  if(P.key==='observe'||P.key==='freeze'){ $('#sceneSvg').innerHTML=wardScene(false); }
+  if(P.key==='observe'){ banner(`${c.shift} · ${c.patient}`); }
+  if(P.key==='freeze'){ $('#freeze').classList.remove('hidden'); sfx('freeze'); }
+  if(P.key==='forward'){
+    $('#sceneSvg').innerHTML=wardScene(true);
+    $('#clockFx').classList.remove('hidden'); sfx('whirl');
+    setTimeout(()=>{ if(PHASES[S.phase].key==='forward'){ $('#clockFx').classList.add('hidden'); banner('02:10 · 10 分鐘後的病房 ── 小鐘的預言準嗎？'); } },3200);
+  }
+  if(P.key==='diff'){ $('#sceneSvg').innerHTML=wardScene(true); banner('找不同 60 秒：跟剛才比，哪裡變了？寫在答案卡'); }
+  if(P.key==='review'){ $('#sceneSvg').innerHTML=wardScene(false); $('#stage').classList.add('review-mode'); renderReview(); }
+  renderSide(); renderAbilities();
+  startTimer(); updateTimer();
+}
+function banner(t,ice){const b=$('#banner');b.textContent=t;b.className='banner'+(ice?' ice':'');}
+
+function renderSide(){
+  const P=PHASES[S.phase],c=C(); let h='';
+  if(P.key==='comic') h=`<div class="clay"><h4>主持人台詞</h4><p style="margin:0;line-height:1.7">「各位黏土小護理師，現在是 <b>${c.shift}</b>。等一下你們有 <b>90 秒</b>進房，時鐘爺爺隨時會喊凍結！」</p></div>
+     <div class="clay"><h4>本局資訊</h4><span class="chip">第 ${c.no} 關</span> <span class="chip">${c.level}</span><p style="margin:.6em 0 0">${c.patient}</p></div>`;
+  if(P.key==='observe') h=`<div class="clay"><h4>觀察規則</h4><ul><li>可以討論、畫線索草圖</li><li><b>不能拍照</b></li><li>最後 10 秒會有滴答聲</li></ul></div>
+     <div class="clay"><h4>突發卡</h4><p class="note" id="surpriseTxt" style="margin:0 0 .6em">進階關可抽 1 張</p><button class="btn" id="drawSurprise">抽突發卡</button></div>`;
+  if(P.key==='freeze') h=`<div class="clay"><h4>答案卡依序寫</h4><ol><li>L1 異常線索</li><li>L2 判斷（附 2 個線索）</li><li>L3 預測＋第一個措施</li></ol><p class="note" style="margin:.6em 0 0">凍結後 90 秒內交卷、且 L1 至少對 5 項，可得「提早交卷」+1。</p></div>
+     <div class="clay"><h4>提早交卷登記</h4><div style="display:flex;flex-wrap:wrap;gap:6px">${S.teams.map((t,i)=>`<button class="tog ${S.scores[i].early?'on':''}" style="width:auto;padding:0 .7em" data-early="${i}">${esc(t)}</button>`).join('')}</div></div>`;
+  if(P.key==='forward') h=`<div class="clay"><h4>主持人台詞</h4><p style="margin:0;line-height:1.7">「時鐘爺爺轉動指針……10 分鐘過去了。你們預測的事，發生了嗎？」</p></div>`;
+  if(P.key==='diff') h=`<div class="clay"><h4>找不同（主持人看）</h4><ol>${c.diffs.map(d=>`<li>${d}</li>`).join('')}</ol><p class="note" style="margin:.6em 0 0">每找到一項 +1，練習變化盲視。</p></div>`;
+  if(P.key==='review') h='';
+  $('#side').innerHTML=h; $('#side').classList.toggle('hidden',!h);
+  const ds=$('#drawSurprise'); if(ds) ds.onclick=()=>{const s=c.surprises[Math.floor(Math.random()*c.surprises.length)];$('#surpriseTxt').textContent=s;$('#surpriseTxt').style.color='var(--pumpkin)';$('#surpriseTxt').style.fontWeight='800';sfx('bell')};
+  $('#side').querySelectorAll('[data-early]').forEach(b=>b.onclick=()=>{const i=+b.dataset.early;S.scores[i].early=!S.scores[i].early;b.classList.toggle('on')});
+}
+
+function renderAbilities(){
+  const P=PHASES[S.phase]; const box=$('#abilities'); box.innerHTML='';
+  if(P.key!=='observe') return;
+  box.innerHTML=`<button class="btn" data-a="eye">小眼・放大鏡</button><button class="btn" data-a="brain">小腦・病歷片段</button><button class="btn" data-a="clock">小鐘・未來快訊</button><button class="btn" data-a="ear">小耳・加問</button>`;
+  box.querySelectorAll('button').forEach(b=>b.onclick=()=>useAbility(b.dataset.a));
+}
+function useAbility(k){
+  const c=C();
+  if(k==='eye'){ showLens(); return; }
+  const card=c.cards[k];
+  if(k==='ear'){
+    openModal(`<h3>小耳・${card.title}</h3><p class="note" style="margin-top:0">隊伍選一題問：</p>${card.options.map((o,i)=>`<button class="btn" style="display:block;width:100%;text-align:left;white-space:normal;margin:8px 0" data-q="${i}">${esc(o.q)}</button>`).join('')}<div id="earAns"></div>`,
+      body=>body.querySelectorAll('[data-q]').forEach(b=>b.onclick=()=>{body.querySelector('#earAns').innerHTML=`<div class="card-face">${esc(card.options[+b.dataset.q].a)}</div>`}));
+    return;
+  }
+  openModal(`<h3>${k==='brain'?'小腦':'小鐘'}・${card.title}</h3><div class="card-face">${card.body}</div>`);
+}
+function openModal(html,after){
+  $('#modalBody').innerHTML=html+`<div style="text-align:right;margin-top:14px"><button class="btn mint" id="closeModal">收起卡片</button></div>`;
+  $('#modal').classList.remove('hidden'); $('#closeModal').onclick=closeModal; if(after) after($('#modalBody'));
+}
+function closeModal(){$('#modal').classList.add('hidden')}
+$('#modal').onclick=e=>{if(e.target.id==='modal')closeModal()};
+
+/* ---------- magnifier (10 s) ---------- */
+let lensT=null,lensEnd=0;
+function showLens(){
+  if(!['observe'].includes(PHASES[S.phase].key)) return;
+  $('#lens').classList.remove('hidden');$('#lensTime').classList.remove('hidden');
+  lensEnd=Date.now()+10000; clearInterval(lensT);
+  const r=$('#stage').getBoundingClientRect(); moveLens(r.left+r.width/2,r.top+r.height/2);
+  lensT=setInterval(()=>{const s=Math.ceil((lensEnd-Date.now())/1000);$('#lensTime').textContent=`放大鏡 ${s}s`;if(s<=0)hideLens()},200);
+}
+function hideLens(){clearInterval(lensT);$('#lens').classList.add('hidden');$('#lensTime').classList.add('hidden')}
+function moveLens(cx,cy){
+  const svg=$('#sceneSvg'); const m=svg.getScreenCTM(); if(!m) return;
+  const p=new DOMPoint(cx,cy).matrixTransform(m.inverse());
+  const w=($('#lens').offsetWidth||300)/m.a/2.4;
+  $('#lensSvg').setAttribute('viewBox',`${p.x-w/2} ${p.y-w/2} ${w} ${w}`);
+  Object.assign($('#lens').style,{left:cx+'px',top:cy+'px'});
+  Object.assign($('#lensTime').style,{left:cx+'px',top:(cy+($('#lens').offsetWidth/2)+16)+'px'});
+}
+document.addEventListener('pointermove',e=>{if(!$('#lens').classList.contains('hidden'))moveLens(e.clientX,e.clientY)});
+
+/* ---------- timer ---------- */
+let tick=null,last=0,lastSec=null;
+function startTimer(){stopTimer();S.running=true;last=performance.now();tick=setInterval(step,200);$('#pauseBtn').textContent='❚❚ 暫停'}
+function stopTimer(){clearInterval(tick);tick=null}
+function step(){
+  const now=performance.now(); if(S.running){S.remain-= (now-last)/1000;} last=now;
+  if(S.remain<=0){S.remain=0;updateTimer();
+    const k=PHASES[S.phase].key;
+    if(k==='review'){stopTimer();return;}
+    if(k==='observe'){sfx('freeze');}
+    goPhase(S.phase+1);return;}
+  updateTimer();
+}
+function updateTimer(){
+  const r=Math.ceil(S.remain); const m=Math.floor(r/60),s=r%60;
+  $('#timerNum').textContent=`${m}:${String(s).padStart(2,'0')}`;
+  const warn=r<=10&&PHASES[S.phase].key!=='review';
+  $('#timerNum').classList.toggle('warn',warn);
+  const f=$('#popFill'); f.style.width=Math.max(0,S.remain/S.total*100)+'%'; f.classList.toggle('hot',warn);
+  if(warn && S.running && r!==lastSec && r>0) sfx(PHASES[S.phase].key==='observe'?'tickFast':'tick');
+  lastSec=r;
+}
+$('#pauseBtn').onclick=togglePause;
+function togglePause(){S.running=!S.running;$('#pauseBtn').textContent=S.running?'❚❚ 暫停':'▶ 繼續';last=performance.now()}
+$('#nextBtn').onclick=()=>{ if(S.phase===PHASES.length-1){ finishRound(); } else goPhase(S.phase+1) };
+$('#prevBtn').onclick=()=>goPhase(S.phase-1);
+$('#fsBtn').onclick=()=>{try{document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen()}catch(e){}};
+$('#soundBtn').onclick=()=>{S.sound=!S.sound;$('#soundBtn').textContent='音效：'+(S.sound?'開':'關');save()};
+document.addEventListener('keydown',e=>{
+  if($('#game').classList.contains('hidden')||e.target.tagName==='INPUT')return;
+  if(e.key==='ArrowRight'){e.preventDefault();$('#nextBtn').click()}
+  else if(e.key==='ArrowLeft'){e.preventDefault();goPhase(S.phase-1)}
+  else if(e.key===' '){e.preventDefault();togglePause()}
+  else if(e.key==='f'||e.key==='F'){$('#fsBtn').click()}
+  else if(e.key==='m'||e.key==='M'){showLens()}
+  else if(e.key==='Escape'){closeModal();hideLens()}
+});
+
+/* ---------- sound (Web Audio, 無外部檔案) ---------- */
+let AC=null;
+function initAudio(){try{AC=AC||new (window.AudioContext||window.webkitAudioContext)()}catch(e){}}
+function tone(f,d,type='sine',v=.18,when=0){if(!AC||!S.sound)return;const t=AC.currentTime+when;const o=AC.createOscillator(),g=AC.createGain();o.type=type;o.frequency.setValueAtTime(f,t);g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(.001,t+d);o.connect(g).connect(AC.destination);o.start(t);o.stop(t+d)}
+function sfx(k){try{
+  if(k==='tick')tone(1200,.05,'square',.08);
+  if(k==='tickFast'){tone(1400,.04,'square',.1);tone(1000,.04,'square',.07,.25)}
+  if(k==='freeze'){[1568,1318,1046,784].forEach((f,i)=>tone(f,.5,'triangle',.14,i*.07))}
+  if(k==='whirl'){for(let i=0;i<12;i++)tone(500+i*60,.08,'sine',.08,i*.2)}
+  if(k==='bell'){tone(880,.3,'sine',.15);tone(880,.3,'sine',.15,.35)}
+  if(k==='stamp'){tone(90,.25,'sine',.35);tone(60,.3,'triangle',.25,.02)}
+  if(k==='star'){tone(1318,.12,'sine',.12);tone(1760,.18,'sine',.12,.08)}
+}catch(e){}}
+
+/* =========================================================
+   計分、結局、復盤
+   ========================================================= */
+function calc(sc){
+  const l1=Math.min(8,sc.l1);
+  return l1 - sc.distr*0.5 + (sc.l2?2:0) + (sc.l3?3:0) + (sc.act?2:0) + sc.diff + (sc.early?1:0) + (sc.hidden?3:0);
+}
+function ending(sc){
+  if(sc.l2&&sc.l3&&sc.act) return {cls:'perfect',txt:'完美救援'};
+  if(sc.l2) return {cls:'after',txt:'救回但有後遺症'};
+  return {cls:'icu',txt:'惡化轉 ICU'};
+}
+function renderReview(){
+  const c=C(); const rv=$('#review'); rv.classList.remove('hidden');
+  const numIn=(i,f,max)=>`<span class="num-in"><button data-i="${i}" data-f="${f}" data-d="-1" aria-label="減">−</button><span id="v-${f}-${i}">${S.scores[i][f]}</span><button data-i="${i}" data-f="${f}" data-d="1" data-max="${max}" aria-label="加">＋</button></span>`;
+  const tog=(i,f)=>`<button class="tog ${S.scores[i][f]?'on':''}" data-i="${i}" data-t="${f}">${S.scores[i][f]?'✓':''}</button>`;
+  rv.innerHTML=`<div class="rv-grid">
+    <div class="clay">
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:6px"><h3 style="margin:0">助教計分</h3><span class="note">點 ＋／− 與 ✓，總分與結局印章即時計算</span></div>
+      <div style="overflow-x:auto"><table class="score">
+        <tr><th>隊伍</th><th>L1 真線索<br>+1</th><th>誤認干擾<br>−0.5</th><th>L2<br>+2</th><th>L3 預測<br>+3</th><th>第一措施<br>+2</th><th>找不同<br>+1</th><th>提早交卷<br>+1</th><th>隱藏線索<br>+3</th><th>總分</th><th>結局</th></tr>
+        ${S.teams.map((t,i)=>`<tr><td><span class="dot" style="display:inline-block;vertical-align:-2px;margin-right:6px;background:${TEAM_COLORS[i]}"></span>${esc(t)}</td>
+          <td>${numIn(i,'l1',8)}</td><td>${numIn(i,'distr',4)}</td><td>${tog(i,'l2')}</td><td>${tog(i,'l3')}</td><td>${tog(i,'act')}</td><td>${numIn(i,'diff',c.diffs.length)}</td><td>${tog(i,'early')}</td><td>${tog(i,'hidden')}</td>
+          <td class="total" id="tot-${i}"></td><td id="end-${i}"></td></tr>`).join('')}
+      </table></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
+        <button class="btn peach" id="revealEnd">揭曉結局印章</button>
+        <button class="btn" id="showScene">看病房＋線索位置</button>
+        <button class="btn mint" id="finishBtn">本局結算 → 排行榜</button>
+      </div>
+      <div id="endReveal" style="margin-top:12px"></div>
+    </div>
+    <div class="clay ans">
+      <h3 style="margin:0 0 .3em">標準答案</h3>
+      <dl style="margin:0">
+        <dt><span class="lvl">L2</span>判斷</dt><dd>${c.answer.L2}</dd>
+        <dt><span class="lvl">L3</span>預測</dt><dd>${c.answer.L3}</dd>
+        <dt>第一個措施</dt><dd>${c.answer.act}</dd>
+      </dl>
+      <h4 style="margin:.9em 0 .4em">每局復盤三問</h4>
+      <ol style="margin:0;padding-left:1.3em;line-height:1.7">
+        <li>你第一眼看到什麼？漏掉的線索為什麼沒看到？</li>
+        <li>哪兩個線索合在一起，才讓你看懂這個情況？</li>
+        <li>回到真實病房，進房前 10 秒你會先掃哪三個地方？</li>
+      </ol>
+      <p class="note" style="margin:.8em 0 0"><b>阿剛學長：</b>「我當年也漏看了床頭卡那行小字。」<br><b>結局卡彩蛋：</b>${c.trivia}</p>
+    </div>
+  </div>`;
+  const refresh=()=>S.teams.forEach((t,i)=>{const sc=S.scores[i];$('#tot-'+i).textContent=calc(sc);const e=ending(sc);$('#end-'+i).innerHTML=`<span class="stamp ${e.cls}">${e.txt}</span>`});
+  rv.querySelectorAll('.num-in button').forEach(b=>b.onclick=()=>{const i=+b.dataset.i,f=b.dataset.f,d=+b.dataset.d;const max=+(b.dataset.max||99);S.scores[i][f]=Math.max(0,Math.min(max,S.scores[i][f]+d));$(`#v-${f}-${i}`).textContent=S.scores[i][f];if(d>0)sfx('star');refresh()});
+  rv.querySelectorAll('.tog').forEach(b=>b.onclick=()=>{const i=+b.dataset.i,f=b.dataset.t;S.scores[i][f]=!S.scores[i][f];b.classList.toggle('on');b.textContent=S.scores[i][f]?'✓':'';refresh()});
+  refresh();
+  $('#revealEnd').onclick=()=>{sfx('stamp');$('#endReveal').innerHTML=S.teams.map((t,i)=>{const e=ending(S.scores[i]);return `<div style="display:flex;align-items:center;gap:12px;margin:8px 0;flex-wrap:wrap"><b style="min-width:4.5em">${esc(t)}</b><span class="stamp big ${e.cls}" style="animation-delay:${i*.25}s">${e.txt}</span>${e.cls!=='perfect'?`<span class="note">差一點！${c.nearMiss}</span>`:''}</div>`}).join('')};
+  $('#showScene').onclick=showSceneWithClues;
+  $('#finishBtn').onclick=finishRound;
+}
+function showSceneWithClues(){
+  const c=C(); $('#review').classList.add('hidden'); $('#stage').classList.remove('review-mode');
+  $('#hotspots').classList.remove('hidden');
+  $('#side').classList.remove('hidden');
+  $('#side').innerHTML=`<div class="clay"><h4>病房線索揭曉</h4><div class="cluelist">${c.clues.map(x=>`<div><span class="n ${x.type==='hidden'?'h':x.type==='distr'?'d':''}">${x.n}</span><span>${x.text}<br><span class="note">${x.where}・${x.lvl}</span></span></div>`).join('')}</div></div>
+    <div class="clay"><h4>10 分鐘後變了什麼</h4><ol>${c.diffs.map(d=>`<li>${d}</li>`).join('')}</ol></div>
+    <button class="btn mint" id="backScore">← 回到計分</button>`;
+  $('#backScore').onclick=()=>{$('#hotspots').classList.add('hidden');$('#side').classList.add('hidden');$('#review').classList.remove('hidden');$('#stage').classList.add('review-mode')};
+}
+function finishRound(){
+  const c=C();
+  S.history.push({round:S.round,case:c.name,scores:S.teams.map((t,i)=>({team:t,pts:calc(S.scores[i]),end:ending(S.scores[i]).txt,eagle:S.scores[i].hidden,l3:S.scores[i].l3}))});
+  save(); stopTimer();
+  const totals=S.teams.map((t,i)=>({t,i,pts:S.history.reduce((a,h)=>a+((h.scores[i]||{}).pts||0),0)})).sort((a,b)=>b.pts-a.pts);
+  const max=Math.max(1,...totals.map(x=>x.pts));
+  const last=S.history[S.history.length-1];
+  const eagles=last.scores.filter(s=>s.eagle).map(s=>s.team), seers=last.scores.filter(s=>s.l3).map(s=>s.team);
+  $('#phaseName').textContent=`第 ${S.round} 局結算 · 排行榜`;
+  $('#sceneSvg').innerHTML=''; ['comic','freeze','clockFx','banner'].forEach(id=>$('#'+id).classList.add('hidden'));
+  $('#side').classList.add('hidden'); $('#abilities').innerHTML='';
+  $('#stage').classList.add('review-mode');
+  $('#review').classList.remove('hidden');
+  $('#review').innerHTML=`<div class="rv-grid"><div class="clay"><h3 style="margin-top:0">排行榜（累計 ${S.history.length} 局，只顯示隊名）</h3>
+    <div class="board">${totals.map((x,k)=>`<div class="rowb"><span class="rank">${k+1}</span><span class="dot" style="background:${TEAM_COLORS[x.i]}"></span><b style="min-width:4.5em">${esc(x.t)}</b><span class="bar"><i style="width:${Math.max(4,x.pts/max*100)}%"></i></span><b class="total">${x.pts}</b></div>`).join('')}</div></div>
+    <div class="clay"><h3 style="margin-top:0">本局特別獎</h3>
+      <p><span class="stamp perfect">最佳預言家</span>　${seers.length?seers.map(esc).join('、'):'（本局從缺）'}</p>
+      <p><span class="stamp after">鷹眼獎</span>　${eagles.length?eagles.map(esc).join('、'):'（本局從缺）'}</p>
+      <p class="note">破解本關的隊伍，請在「觀察者圖鑑」貼一枚貼紙。集滿 5 枚升級銀時鐘、10 枚金時鐘護理師。</p>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn peach" id="nextRound">下一局 ▶</button>
+        <button class="btn ghost" id="resetAll">清除排行榜</button>
+      </div>
+      <p class="note" style="margin-bottom:0">總復盤收尾：請每人寫下自己的「進房 10 秒掃描口訣」，例如「人、管、床、地、儀」。</p>
+    </div></div>`;
+  $('#nextRound').onclick=()=>{S.round++;save();startRound()};
+  $('#resetAll').onclick=()=>{if(confirm('確定清除所有局數與排行榜？')){S.history=[];S.round=1;save();finishRoundView()}};
+  sfx('stamp');
+}
+function finishRoundView(){ $('#homeBtn').click(); }
+
+renderStart();
+$('#soundBtn').textContent='音效：'+(S.sound?'開':'關');
+// clock ticks for fast-forward overlay
+document.getElementById('ticks').innerHTML=Array.from({length:12},(_,i)=>`<rect x="146" y="30" width="8" height="${i%3?14:24}" rx="4" fill="#8A7462" transform="rotate(${i*30} 150 150)"/>`).join('');
+</script>
+</body>
+</html>
